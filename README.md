@@ -1,68 +1,107 @@
-# Terraform AWS ALB Module
+# AWS Application Load Balancer (ALB) Terraform Module
 
-This module provisions an AWS Application Load Balancer (ALB) along with a target group and listener. It is designed to be reusable and can be integrated with EC2, Auto Scaling Groups, or container-based workloads.
-
----
+A production-grade, highly flexible, and reusable Terraform module for provisioning an AWS Application Load Balancer (ALB) following Terraform Registry standards.
 
 ## 🚀 Features
 
-* Creates an Application Load Balancer (ALB)
-* Configures target group for backend instances
-* Sets up HTTP listener (port 80)
-* Supports health checks
-* Integrates with VPC and security groups
-* Environment-based tagging
-
----
+- **Fully Dynamic**: Supports any number of target groups and listeners using `for_each`.
+- **Flexible Configuration**: Uses `optional()` types and `try()` logic for optional attributes (HTTPS, health checks, etc.).
+- **Production-Ready**: Adheres to AWS best practices with configurable deletion protection, tagging, and health checks.
+- **Minimal Inputs**: Works with sensible defaults while allowing deep customization.
 
 ## 📦 Usage
 
+### Minimal Example
 ```hcl
-provider "aws" {
-  region = "ap-south-1"
-}
-
 module "alb" {
-  source = "aaditya-2905/alb/aws"
+  source  = "aaditya-2905/alb/aws"
+  version = "~> 1.0"
 
   environment = "dev"
-  vpc_id      = "vpc-xxxxxxxx"
-  subnet_ids  = ["subnet-xxxxxx", "subnet-yyyyyy"]
-  sg_id       = "sg-xxxxxxxx"
+  name        = "my-alb"
+  vpc_id      = "vpc-12345678"
+  subnet_ids  = ["subnet-12345678", "subnet-87654321"]
+  sg_id       = "sg-12345678"
+  
+  target_groups = {
+    web-tg = {}
+  }
+
+  listeners = {
+    http = {
+      target_group_key = "web-tg"
+    }
+  }
 }
 ```
 
----
+### Advanced Example (HTTPS & Custom Health Checks)
+```hcl
+module "alb" {
+  source  = "aaditya-2905/alb/aws"
+
+  environment     = "prod"
+  name            = "app-alb"
+  internal        = false
+  vpc_id          = "vpc-12345678"
+  subnet_ids      = ["subnet-12345678", "subnet-87654321"]
+  sg_id           = "sg-12345678"
+
+  target_groups = {
+    api-tg = {
+      port     = 8080
+      protocol = "HTTP"
+      health_check = {
+        path     = "/health"
+        interval = 60
+      }
+    }
+  }
+
+  listeners = {
+    https = {
+      port             = 443
+      protocol         = "HTTPS"
+      ssl_policy       = "ELBSecurityPolicy-2016-08"
+      certificate_arn  = "arn:aws:acm:region:account:certificate/uuid"
+      target_group_key = "api-tg"
+    }
+  }
+
+  tags = {
+    Project = "my-app"
+  }
+}
+```
 
 ## 📥 Inputs
 
-| Name        | Description                               | Type         | Required |
-| ----------- | ----------------------------------------- | ------------ | -------- |
-| environment | Environment name (dev/prod)               | string       | ✅        |
-| vpc_id      | VPC ID                                    | string       | ✅        |
-| subnet_ids  | List of subnet IDs (multi-AZ recommended) | list(string) | ✅        |
-| sg_id       | Security Group ID for ALB                 | string       | ✅        |
-
----
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| `environment` | Environment name (e.g. dev, prod) | `string` | n/a | **Yes** |
+| `name` | The name of the ALB | `string` | n/a | **Yes** |
+| `vpc_id` | The VPC ID where resources will be created | `string` | n/a | **Yes** |
+| `subnet_ids` | A list of subnet IDs to attach to the LB | `list(string)` | n/a | **Yes** |
+| `sg_id` | Security Group ID for ALB | `string` | n/a | **Yes** |
+| `internal` | If true, the LB will be internal | `bool` | `false` | No |
+| `enable_deletion_protection` | If true, deletion of the load balancer will be disabled | `bool` | `false` | No |
+| `target_groups` | Map of target group configurations | `map(object)` | `{}` | No |
+| `listeners` | Map of listener configurations | `map(object)` | `{}` | No |
+| `tags` | A map of tags to add to all resources | `map(string)` | `{}` | No |
 
 ## 📤 Outputs
 
-| Name             | Description             |
-| ---------------- | ----------------------- |
-| alb_dns_name     | DNS name of the ALB     |
-| target_group_arn | ARN of the target group |
+| Name | Description |
+|------|-------------|
+| `alb_dns_name` | The DNS name of the ALB |
+| `target_group_arns` | ARNs of the target groups created |
+| `listener_arns` | ARNs of the listeners created |
 
----
+## 🛠️ Requirements
 
-## 🧠 Notes
+- Terraform >= 1.3.0
+- AWS Provider >= 4.0.0
 
-* ALB must be deployed in public subnets for internet-facing access
-* Ensure security group allows inbound HTTP (port 80)
-* Backend instances must be registered to the target group
-* Health check path is set to `/` by default
+## 📄 License
 
----
-
-## 🔗 Example
-
-See the `examples/basic` directory for a working example.
+MIT

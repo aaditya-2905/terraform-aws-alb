@@ -1,21 +1,78 @@
+variable "create_alb" {
+  description = "Whether to create the ALB resources"
+  type        = bool
+  default     = true
+}
+
+variable "name" {
+  description = "The name of the ALB"
+  type        = string
+}
+
+variable "internal" {
+  description = "If true, the LB will be internal"
+  type        = bool
+  default     = false
+}
+
 variable "vpc_id" {
-  type = string
+  description = "The VPC ID where the ALB and Target Groups will be created"
+  type        = string
 }
 
-variable "subnet_ids" {
-  type = list(string)
+variable "subnets" {
+  description = "A list of subnet IDs to attach to the LB"
+  type        = list(string)
 }
 
-variable "security_group_id" {
-  type = string
+variable "security_groups" {
+  description = "A list of security group IDs to assign to the LB"
+  type        = list(string)
+  default     = []
 }
 
-variable "target_port" {
-  type    = number
-  default = 80
+variable "enable_deletion_protection" {
+  description = "If true, deletion of the load balancer will be disabled via the AWS API"
+  type        = bool
+  default     = false
+}
+
+variable "target_groups" {
+  description = "Map of target group configurations"
+  type = map(object({
+    port                 = optional(number, 80)
+    protocol             = optional(string, "HTTP")
+    target_type          = optional(string, "instance")
+    deregistration_delay = optional(number, 300)
+    health_check = optional(object({
+      enabled             = optional(bool, true)
+      interval            = optional(number, 30)
+      path                = optional(string, "/")
+      port                = optional(string, "traffic-port")
+      protocol            = optional(string, "HTTP")
+      timeout             = optional(number, 5)
+      healthy_threshold   = optional(number, 3)
+      unhealthy_threshold = optional(number, 3)
+      matcher             = optional(string, "200")
+    }), {})
+  }))
+  default = {}
+}
+
+variable "listeners" {
+  description = "Map of listener configurations"
+  type = map(object({
+    port            = optional(number, 80)
+    protocol        = optional(string, "HTTP")
+    target_group_key = string
+    ssl_policy      = optional(string)
+    certificate_arn = optional(string)
+  }))
+  default = {}
 }
 
 variable "tags" {
-  type    = map(string)
-  default = {}
+  description = "A map of tags to add to all resources"
+  type        = map(string)
+  default     = {}
 }

@@ -1,9 +1,16 @@
 module "alb" {
   source = "./modules/alb"
 
-  vpc_id            = var.vpc_id
-  subnet_ids        = var.subnet_ids
-  security_group_id = var.sg_id
-  target_port       = 80
-  tags              = local.common_tags
+  create_alb                 = true
+  name                       = var.name
+  internal                   = var.internal
+  vpc_id                     = var.vpc_id
+  subnets                    = var.subnet_ids
+  security_groups            = [var.sg_id]
+  enable_deletion_protection = var.enable_deletion_protection
+
+  target_groups = var.target_groups
+  listeners     = var.listeners
+
+  tags = merge(local.common_tags, var.tags)
 }
