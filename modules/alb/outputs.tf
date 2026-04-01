@@ -19,8 +19,11 @@ output "lb_zone_id" {
 }
 
 output "target_group_arns" {
-  description = "ARNs of the target groups"
-  value       = { for k, v in aws_lb_target_group.this : k => v.arn }
+  description = "Map of target group ARNs"
+  value = {
+    for k, v in aws_lb_target_group.this :
+    k => v.arn
+  }
 }
 
 output "target_group_names" {
