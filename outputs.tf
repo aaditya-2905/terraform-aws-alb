@@ -12,3 +12,11 @@ output "listener_arns" {
   description = "ARNs of the listeners"
   value       = module.alb.listener_arns
 }
+
+output "target_group_arns" {
+  description = "Map of target group ARNs"
+  value = {
+    for k, v in aws_lb_target_group.this :
+    k => v.arn
+  }
+}
