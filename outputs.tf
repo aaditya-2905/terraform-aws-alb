@@ -12,3 +12,8 @@ output "target_group_arns" {
   description = "Map of target group ARNs"
   value       = module.alb.target_group_arns
 }
+
+output "lb_arn" {
+  description = "ARN of the load balancer"
+  value       = module.alb.lb_arn
+}
