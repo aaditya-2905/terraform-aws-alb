@@ -96,6 +96,7 @@ module "alb" {
 | `alb_dns_name` | The DNS name of the ALB |
 | `target_group_arns` | ARNs of the target groups created |
 | `listener_arns` | ARNs of the listeners created |
+| `lb_arn` | ARNs of the load balancer |
 
 ## 🛠️ Requirements
 

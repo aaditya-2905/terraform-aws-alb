@@ -14,6 +14,6 @@ output "target_group_arns" {
 }
 
 output "lb_arn" {
-  description = "ARN of the load balancer"
+  description = "ARN's of the load balancer"
   value       = module.alb.lb_arn
 }
